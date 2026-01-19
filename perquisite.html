@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Disposal Perquisite Calculator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME CONFIGURATION --- */
+        :root {
+            /* Backgrounds */
+            --bg-body: #F3F4F6; 
+            --bg-card: #ffffff; 
+            
+            /* Primary Brand Colors */
+            --brand-primary: #551aeb; /* Vibrant Purple-Blue */
+            --brand-secondary: #6622b5; /* Deep Purple */
+            --brand-dark: #501efa; /* Rich Indigo */
+            
+            /* Text Colors */
+            --text-main: #111827;
+            --text-muted: #6B7280;
+            
+            /* Verdict Colors */
+            --status-taxable-bg: #F5F3FF; 
+            --status-taxable-text: #551aeb; 
+            --status-none-bg: #F3F4F6;
+            --status-none-text: #374151;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+        }
+
+        /* --- UTILITIES USING VARIABLES --- */
+        .bg-theme-card { background-color: var(--bg-card); }
+        .bg-theme-primary { background-color: var(--brand-primary); }
+        .bg-theme-secondary { background-color: var(--brand-secondary); }
+        
+        .text-theme-primary { color: var(--brand-primary); }
+        .text-theme-secondary { color: var(--brand-secondary); }
+        .text-theme-dark { color: var(--brand-dark); }
+        
+        .border-theme-primary { border-color: var(--brand-primary); }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px; 
+            margin: 0 auto;
+            height: 300px;
+        }
+
+        /* Report Specific Styles for Clean PDF */
+        #report-content {
+            background: var(--bg-card); 
+        }
+        
+        /* Modal Backdrop */
+        .modal-backdrop {
+            background-color: rgba(80, 30, 250, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: var(--brand-secondary); 
+            border-radius: 3px;
+        }
+        
+        /* Form Inputs Focus State */
+        .form-input:focus {
+            ring-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navbar -->
+    <nav class="bg-theme-primary text-white shadow-lg sticky top-0 z-40" style="background: linear-gradient(to right, var(--brand-primary), var(--brand-secondary));">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <!-- Icon container -->
+                <div class="bg-white/20 h-8 w-8 rounded flex items-center justify-center text-white font-bold backdrop-blur-sm">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <h1 class="text-lg font-bold tracking-tight">Perquisite Calculator</h1>
+            </div>
+            <button onclick="generatePDF()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm border border-white/20">
+                <i class="fa-solid fa-file-pdf"></i> Download PDF
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+        <!-- Section 1: Regulatory Summary -->
+        <section class="bg-theme-card rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-scale-balanced text-gray-400"></i>
+                    <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wide">Regulatory Context</h2>
+                </div>
+                <button onclick="toggleModal('ruleModal')" class="text-xs text-theme-primary hover:text-theme-dark font-medium flex items-center gap-1 hover:underline">
+                    <i class="fa-regular fa-file-lines"></i> View Official Extract
+                </button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-bold mb-2 text-theme-dark">Rule 3(7)(viii) - Income Tax Rules, 1962</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                        Valuation of perquisite for movable assets sold to an employee. For <strong>Computers and Electronic Items</strong>, the value is calculated using the reducing balance method.
+                    </p>
+                    <div class="flex gap-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-theme-primary border border-purple-100">
+                            Computers / Laptops
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                            Electronic Items
+                        </span>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Calculation Method (Proviso)</h4>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-arrow-down-long mt-1 text-theme-secondary"></i>
+                            <span><strong>Rate:</strong> 50% Depreciation per annum.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-calculator mt-1 text-theme-secondary"></i>
+                            <span><strong>Method:</strong> Reducing Balance (WDV).</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-calendar-check mt-1 text-theme-secondary"></i>
+                            <span><strong>Period:</strong> For each <em>completed</em> year of use.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Input Data Form -->
+        <section class="bg-theme-card rounded-xl shadow-md border border-gray-200 p-6 relative">
+            <div class="absolute top-0 left-0 w-1 h-full rounded-l-xl bg-theme-primary"></div>
+            <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-theme-dark">
+                <i class="fa-solid fa-pen-to-square text-theme-primary"></i> Transaction Details
+            </h3>
+
+            <!-- Grid Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Column 1: Asset Origin -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase border-b border-gray-100 pb-2">Asset Details</h4>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Supplier Name</label>
+                        <input type="text" id="supplierName" placeholder="e.g. Dell India Pvt Ltd" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Invoice No.</label>
+                            <input type="text" id="invoiceNo" placeholder="INV-2021-001" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Serial No.</label>
+                            <input type="text" id="serialNo" placeholder="S/N 556677" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Invoice Date (Purchase)</label>
+                        <input type="date" id="purchaseDate" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                    </div>
+                </div>
+
+                <!-- Column 2: Costing -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase border-b border-gray-100 pb-2">Costing</h4>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Base Amount (₹)</label>
+                            <input type="number" id="baseAmount" value="60000" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">GST Amount (₹)</label>
+                            <input type="number" id="gstAmount" value="10800" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs font-bold text-gray-700">ITC Claimed?</label>
+                            <!-- Styled Checkbox using accent color -->
+                            <input type="checkbox" id="itcClaimed" checked class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 accent-[#551aeb]">
+                        </div>
+                        <p class="text-[10px] text-gray-500 leading-tight">
+                            If checked, Cost for Depreciation = Base Amount.<br>
+                            If unchecked, Cost = Base + GST.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Effective Cost for Dep.</label>
+                        <input type="text" id="effectiveCost" disabled class="w-full bg-gray-100 border border-gray-200 rounded p-2 text-sm font-bold text-gray-700">
+                    </div>
+                </div>
+
+                <!-- Column 3: Employee & Disposal -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase border-b border-gray-100 pb-2">Employee & Sale</h4>
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Employee Name</label>
+                            <input type="text" id="empName" placeholder="John Doe" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Emp. Code</label>
+                            <input type="text" id="empCode" placeholder="E001" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Disposal Date</label>
+                        <input type="date" id="saleDate" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Recovered Amount (Incl. GST)</label>
+                        <div class="relative">
+                            <input type="number" id="salePrice" value="5000" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-1">Amount Deducted from Employee (Total)</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 3: The Report (Print Target) -->
+        <div id="report-content" class="bg-theme-card rounded-xl shadow-lg border border-gray-200 p-8">
+            
+            <!-- Report Header -->
+            <div class="flex justify-between items-start border-b-2 border-theme-primary pb-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-theme-dark">Perquisite Valuation Report</h2>
+                    <p class="text-sm text-gray-500">Under Rule 3(7)(viii) of Income Tax Rules, 1962</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-400 uppercase">Generated On</p>
+                    <p class="text-sm font-bold text-gray-700" id="generatedDate">--</p>
+                </div>
+            </div>
+
+            <!-- Report Details Grid -->
+            <div class="grid grid-cols-2 gap-8 mb-8 text-sm">
+                <div>
+                    <h4 class="font-bold border-b border-gray-200 pb-1 mb-2 text-theme-secondary">Asset Details</h4>
+                    <table class="w-full text-gray-700">
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Invoice No:</td>
+                            <td class="py-1 font-medium text-right" id="repInvoiceNo">-</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Date of Purchase:</td>
+                            <td class="py-1 font-medium text-right" id="repPurchaseDate">-</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Supplier:</td>
+                            <td class="py-1 font-medium text-right" id="repSupplier">-</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Serial No:</td>
+                            <td class="py-1 font-medium text-right" id="repSerial">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1 text-gray-500">Effective Cost:</td>
+                            <td class="py-1 font-medium text-right" id="repCost">-</td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <h4 class="font-bold border-b border-gray-200 pb-1 mb-2 text-theme-secondary">Beneficiary Details</h4>
+                    <table class="w-full text-gray-700">
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Employee Name:</td>
+                            <td class="py-1 font-medium text-right" id="repEmpName">-</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Employee Code:</td>
+                            <td class="py-1 font-medium text-right" id="repEmpCode">-</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Sale Date:</td>
+                            <td class="py-1 font-medium text-right" id="repSaleDate">-</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-1 text-gray-500">Recovery (Incl. GST):</td>
+                            <td class="py-1 font-medium text-right" id="repRecoveryAmount">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1 text-gray-500">Completed Years:</td>
+                            <td class="py-1 font-medium text-right" id="repYears">-</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Verdict Banner -->
+            <div id="verdictBanner" class="border-l-4 p-6 mb-8 rounded-r-lg flex items-center justify-between transition-colors duration-300" style="background-color: var(--status-taxable-bg); border-color: var(--status-taxable-text);">
+                <div>
+                    <p class="text-xs font-bold uppercase mb-1" style="color: var(--status-taxable-text);">Final Taxable Value</p>
+                    <h3 class="text-3xl font-bold" id="finalPerquisite" style="color: var(--brand-dark);">₹ 0</h3>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-semibold" id="verdictText" style="color: var(--status-taxable-text);">Taxable</p>
+                    <p class="text-xs" style="color: var(--status-taxable-text); opacity: 0.8;">Add to Salary Income</p>
+                </div>
+            </div>
+
+            <!-- Calculation Log & Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="font-bold text-gray-800 mb-3">Depreciation Schedule</h4>
+                    <div class="bg-gray-50 rounded border border-gray-200 overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100 text-gray-500 text-xs uppercase font-semibold">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Year</th>
+                                    <th class="px-4 py-2 text-right">Depreciation</th>
+                                    <th class="px-4 py-2 text-right">Closing WDV</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calcTableBody" class="divide-y divide-gray-100 text-gray-700">
+                                <!-- JS Populated -->
+                            </tbody>
+                            <tfoot class="bg-gray-100 font-bold border-t border-gray-200">
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-600">Less: Recovery (Total)</td>
+                                    <td class="px-4 py-2 text-right text-theme-secondary" colspan="2" id="tableRecovery">(-) ₹ 0</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-900">Perquisite Value</td>
+                                    <td class="px-4 py-2 text-right text-theme-primary" colspan="2" id="tableFinal">₹ 0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="partialYearWarning" class="hidden mt-3 text-xs text-orange-600 bg-orange-50 border border-orange-200 p-2 rounded">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                        Note: Partial year ignored as per "Completed Year" rule.
+                    </div>
+                </div>
+                
+                <div class="flex flex-col justify-center">
+                    <h4 class="font-bold text-gray-800 mb-3 text-center">Asset Value Graph</h4>
+                    <div class="chart-container">
+                        <canvas id="depChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal for Legal Text -->
+    <div id="ruleModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity modal-backdrop" aria-hidden="true" onclick="toggleModal('ruleModal')"></div>
+
+            <!-- Modal Panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-50 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fa-solid fa-scale-balanced text-theme-primary"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-theme-dark" id="modal-title">
+                                Official Extract: Rule 3(7)(viii)
+                            </h3>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-700 bg-gray-50 p-6 rounded border border-gray-200 leading-relaxed font-serif custom-scroll max-h-[60vh] overflow-y-auto">
+                                    (viii) The value of benefit to the employee arising from the transfer of any movable asset belonging to the employer directly or indirectly to the employee or any member of his household shall be determined to be the amount representing the actual cost of such assets to the employer as reduced by the cost of normal wear and tear calculated at the rate of 10 per cent of such cost for each completed year during which such asset was put to use by the employer and as further reduced by the amount, if any, paid or recovered from the employee being the consideration for such transfer : Provided that in the case of computers and electronic items, the normal wear and tear would be calculated at the rate of 50 per cent and in the case of motor cars at the rate of 20 per cent by the reducing balance method.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-theme-primary text-base font-medium text-white hover:bg-theme-secondary focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition-colors" onclick="toggleModal('ruleModal')">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- html2pdf.js for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        // --- Modal Control ---
+        function toggleModal(modalID) {
+            const modal = document.getElementById(modalID);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; 
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto'; 
+            }
+        }
+
+        // --- State ---
+        const state = {
+            supplierName: '',
+            invoiceNo: '',
+            serialNo: '',
+            purchaseDate: null,
+            baseAmount: 60000,
+            gstAmount: 10800,
+            itcClaimed: true,
+            
+            empName: '',
+            empCode: '',
+            saleDate: null,
+            salePrice: 5000
+        };
+
+        const DEP_RATE = 0.50; // 50%
+        let chartInstance = null;
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const threeYearsAgo = new Date();
+            threeYearsAgo.setFullYear(today.getFullYear() - 3);
+
+            // Default Values
+            document.getElementById('purchaseDate').valueAsDate = threeYearsAgo;
+            document.getElementById('saleDate').valueAsDate = today;
+            
+            // Set generated date
+            document.getElementById('generatedDate').innerText = today.toLocaleDateString('en-IN', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            // Listeners
+            const inputs = [
+                'supplierName', 'invoiceNo', 'serialNo', 'purchaseDate', 
+                'baseAmount', 'gstAmount', 'itcClaimed', 
+                'empName', 'empCode', 'saleDate', 'salePrice'
+            ];
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('input', runCalculation);
+                el.addEventListener('change', runCalculation);
+            });
+
+            runCalculation();
+        });
+
+        // --- Core Logic ---
+        function runCalculation() {
+            // 1. Update State
+            state.supplierName = document.getElementById('supplierName').value || '-';
+            state.invoiceNo = document.getElementById('invoiceNo').value || '-';
+            state.serialNo = document.getElementById('serialNo').value || '-';
+            state.purchaseDate = new Date(document.getElementById('purchaseDate').value);
+            state.baseAmount = parseFloat(document.getElementById('baseAmount').value) || 0;
+            state.gstAmount = parseFloat(document.getElementById('gstAmount').value) || 0;
+            state.itcClaimed = document.getElementById('itcClaimed').checked;
+            
+            state.empName = document.getElementById('empName').value || '-';
+            state.empCode = document.getElementById('empCode').value || '-';
+            state.saleDate = new Date(document.getElementById('saleDate').value);
+            state.salePrice = parseFloat(document.getElementById('salePrice').value) || 0;
+
+            // 2. Determine Cost
+            const effectiveCost = state.itcClaimed ? state.baseAmount : (state.baseAmount + state.gstAmount);
+            document.getElementById('effectiveCost').value = formatCurrency(effectiveCost);
+
+            // 3. Calculate Years
+            let completedYears = 0;
+            
+            // Validating Dates before logic
+            if(!isNaN(state.purchaseDate) && !isNaN(state.saleDate)) {
+                while(true) {
+                    let nextAnniversary = new Date(state.purchaseDate);
+                    nextAnniversary.setFullYear(state.purchaseDate.getFullYear() + (completedYears + 1));
+                    
+                    if (state.saleDate >= nextAnniversary) {
+                        completedYears++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // 4. Depreciation Loop
+            let wdv = effectiveCost;
+            let history = [];
+            let wdvPoints = [effectiveCost];
+            let labels = ['Purchase'];
+
+            for(let i=1; i<=completedYears; i++) {
+                let dep = wdv * DEP_RATE;
+                let closing = wdv - dep;
+                history.push({ year: i, dep: dep, closing: closing });
+                wdvPoints.push(closing);
+                labels.push(`Year ${i}`);
+                wdv = closing;
+            }
+
+            // 5. Final Math
+            // "reduced by the amount ... paid or recovered"
+            // The salePrice input is now explicitly the Gross/Total amount paid by employee.
+            // So we deduct the full salePrice from WDV.
+            let perquisite = Math.max(0, wdv - state.salePrice);
+
+            // --- Render Report ---
+            
+            // Header Info
+            document.getElementById('repInvoiceNo').innerText = state.invoiceNo;
+            document.getElementById('repPurchaseDate').innerText = formatDate(state.purchaseDate);
+            document.getElementById('repSupplier').innerText = state.supplierName;
+            document.getElementById('repSerial').innerText = state.serialNo;
+            document.getElementById('repCost').innerText = formatCurrency(effectiveCost) + (state.itcClaimed ? " (Base)" : " (Incl. GST)");
+
+            document.getElementById('repEmpName').innerText = state.empName;
+            document.getElementById('repEmpCode').innerText = state.empCode;
+            document.getElementById('repSaleDate').innerText = formatDate(state.saleDate);
+            document.getElementById('repRecoveryAmount').innerText = formatCurrency(state.salePrice);
+            document.getElementById('repYears').innerText = completedYears;
+
+            // Verdict
+            document.getElementById('finalPerquisite').innerText = formatCurrency(perquisite);
+            const vBanner = document.getElementById('verdictBanner');
+            const vText = document.getElementById('verdictText');
+            
+            if(perquisite > 0) {
+                // Taxable: Use CSS Variables for Styling
+                vBanner.style.backgroundColor = "var(--status-taxable-bg)";
+                vBanner.style.borderColor = "var(--status-taxable-text)";
+                vText.style.color = "var(--status-taxable-text)";
+                vText.innerText = "Taxable Perquisite";
+            } else {
+                // Non-Taxable: Use Grey/Muted variables
+                vBanner.style.backgroundColor = "var(--status-none-bg)";
+                vBanner.style.borderColor = "#9CA3AF"; // Gray 400
+                vText.style.color = "var(--status-none-text)";
+                vText.innerText = "No Taxable Benefit";
+            }
+
+            // Table
+            const tbody = document.getElementById('calcTableBody');
+            tbody.innerHTML = '';
+            history.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2">Year ${row.year}</td>
+                    <td class="px-4 py-2 text-right text-red-500">(-) ${formatCurrency(row.dep)}</td>
+                    <td class="px-4 py-2 text-right font-medium">${formatCurrency(row.closing)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if(history.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-center text-gray-400 italic">No completed years of use.</td></tr>`;
+            }
+
+            document.getElementById('tableRecovery').innerText = `(-) ${formatCurrency(state.salePrice)}`;
+            document.getElementById('tableFinal').innerText = formatCurrency(perquisite);
+
+            // Warning
+            const warn = document.getElementById('partialYearWarning');
+            if(!isNaN(state.saleDate) && !isNaN(state.purchaseDate) && 
+               state.saleDate > state.purchaseDate && 
+               state.saleDate.getDate() !== state.purchaseDate.getDate()) {
+                 warn.classList.remove('hidden');
+            } else {
+                 warn.classList.add('hidden');
+            }
+
+            // Chart
+            updateChart(labels, wdvPoints, state.salePrice);
+        }
+
+        function updateChart(labels, wdvData, salePrice) {
+            const ctx = document.getElementById('depChart').getContext('2d');
+            const saleData = new Array(wdvData.length).fill(salePrice);
+            
+            // Get color from variable for chart
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim();
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--brand-secondary').trim();
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Asset WDV',
+                            data: wdvData,
+                            borderColor: primaryColor,
+                            backgroundColor: 'rgba(85, 26, 235, 0.1)', // #551aeb with opacity
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: true,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Recovery (Paid by Emp)',
+                            data: saleData,
+                            borderColor: '#6B7280', // Gray 500
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Helpers ---
+        function formatCurrency(val) {
+            if(val === undefined || isNaN(val)) return '₹ 0';
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+        }
+
+        function formatDate(d) {
+            if(!d || isNaN(d)) return '-';
+            return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        // --- PDF Generation ---
+        function generatePDF() {
+            if (typeof html2pdf === 'undefined') {
+                alert('Error: The PDF generation library (html2pdf) failed to load. Please check your internet connection or try refreshing the page.');
+                return;
+            }
+
+            const element = document.getElementById('report-content');
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5], 
+                filename:     `Perquisite_Valuation_${state.empCode || 'Report'}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 }, 
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            const originalHeight = element.style.height;
+            element.style.height = 'auto';
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.height = originalHeight;
+            }).catch(err => {
+                console.error("PDF generation failed:", err);
+                alert("An error occurred while generating the PDF. Please try again.");
+                element.style.height = originalHeight;
+            });
+        }
+
+    </script>
+</body>
+
+</html>
