@@ -8,9 +8,6 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -49,23 +46,11 @@
         /* --- UTILITIES USING VARIABLES --- */
         .bg-theme-card { background-color: var(--bg-card); }
         .bg-theme-primary { background-color: var(--brand-primary); }
-        .bg-theme-secondary { background-color: var(--brand-secondary); }
-        
         .text-theme-primary { color: var(--brand-primary); }
         .text-theme-secondary { color: var(--brand-secondary); }
         .text-theme-dark { color: var(--brand-dark); }
-        
         .border-theme-primary { border-color: var(--brand-primary); }
         
-        /* Chart Container */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 700px; 
-            margin: 0 auto;
-            height: 300px;
-        }
-
         /* Report Specific Styles for Clean PDF */
         #report-content {
             background: var(--bg-card); 
@@ -87,12 +72,6 @@
             background: var(--brand-secondary); 
             border-radius: 3px;
         }
-        
-        /* Form Inputs Focus State */
-        .form-input:focus {
-            ring-color: var(--brand-primary);
-            border-color: var(--brand-primary);
-        }
     </style>
 </head>
 <body class="antialiased">
@@ -101,7 +80,6 @@
     <nav class="bg-theme-primary text-white shadow-lg sticky top-0 z-40" style="background: linear-gradient(to right, var(--brand-primary), var(--brand-secondary));">
         <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <!-- Icon container -->
                 <div class="bg-white/20 h-8 w-8 rounded flex items-center justify-center text-white font-bold backdrop-blur-sm">
                     <i class="fa-solid fa-calculator"></i>
                 </div>
@@ -255,7 +233,7 @@
                         <div class="relative">
                             <input type="number" id="salePrice" value="5000" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-800 transition-all">
                         </div>
-                        <p class="text-[10px] text-gray-500 mt-1">Amount Deducted from Employee (Total)</p>
+                        <p class="text-[10px] text-gray-500 mt-1">Total Amount Deducted from Employee</p>
                     </div>
                 </div>
 
@@ -320,8 +298,8 @@
                             <td class="py-1 font-medium text-right" id="repSaleDate">-</td>
                         </tr>
                         <tr class="border-b border-gray-50">
-                            <td class="py-1 text-gray-500">Recovery (Incl. GST):</td>
-                            <td class="py-1 font-medium text-right" id="repRecoveryAmount">-</td>
+                            <td class="py-1 text-gray-500">Total Deducted (Incl. GST):</td>
+                            <td class="py-1 font-medium text-right" id="repRecoveryTotal">-</td>
                         </tr>
                         <tr>
                             <td class="py-1 text-gray-500">Completed Years:</td>
@@ -343,45 +321,41 @@
                 </div>
             </div>
 
-            <!-- Calculation Log & Chart -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h4 class="font-bold text-gray-800 mb-3">Depreciation Schedule</h4>
-                    <div class="bg-gray-50 rounded border border-gray-200 overflow-hidden">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-100 text-gray-500 text-xs uppercase font-semibold">
-                                <tr>
-                                    <th class="px-4 py-2 text-left">Year</th>
-                                    <th class="px-4 py-2 text-right">Depreciation</th>
-                                    <th class="px-4 py-2 text-right">Closing WDV</th>
-                                </tr>
-                            </thead>
-                            <tbody id="calcTableBody" class="divide-y divide-gray-100 text-gray-700">
-                                <!-- JS Populated -->
-                            </tbody>
-                            <tfoot class="bg-gray-100 font-bold border-t border-gray-200">
-                                <tr>
-                                    <td class="px-4 py-2 text-gray-600">Less: Recovery (Total)</td>
-                                    <td class="px-4 py-2 text-right text-theme-secondary" colspan="2" id="tableRecovery">(-) ₹ 0</td>
-                                </tr>
-                                <tr>
-                                    <td class="px-4 py-2 text-gray-900">Perquisite Value</td>
-                                    <td class="px-4 py-2 text-right text-theme-primary" colspan="2" id="tableFinal">₹ 0</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div id="partialYearWarning" class="hidden mt-3 text-xs text-orange-600 bg-orange-50 border border-orange-200 p-2 rounded">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-                        Note: Partial year ignored as per "Completed Year" rule.
-                    </div>
+            <!-- Calculation Table (Full Width) -->
+            <div class="mb-4">
+                <h4 class="font-bold text-gray-800 mb-3">Depreciation Schedule</h4>
+                <div class="bg-gray-50 rounded border border-gray-200 overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 text-gray-500 text-xs uppercase font-semibold">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Year</th>
+                                <th class="px-4 py-2 text-right">Depreciation (50% WDV)</th>
+                                <th class="px-4 py-2 text-right">Closing WDV</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calcTableBody" class="divide-y divide-gray-100 text-gray-700">
+                            <!-- JS Populated -->
+                        </tbody>
+                        <tfoot class="bg-gray-100 font-bold border-t border-gray-200">
+                            <tr>
+                                <td class="px-4 py-3 text-theme-dark align-top">Less: Recovery (Excl. GST)</td>
+                                <td class="px-4 py-3 text-right text-theme-secondary align-top" colspan="2">
+                                    <span id="tableRecoveryBase">(-) ₹ 0</span>
+                                    <div class="text-[10px] text-gray-500 font-normal mt-1" id="recoveryBreakdown">
+                                        (Total Deducted ₹ 0 - GST ₹ 0 @ 18%)
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="bg-purple-50">
+                                <td class="px-4 py-3 text-gray-900 border-t border-purple-200 text-base">Perquisite Value</td>
+                                <td class="px-4 py-3 text-right text-theme-primary border-t border-purple-200 text-base" colspan="2" id="tableFinal">₹ 0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-                
-                <div class="flex flex-col justify-center">
-                    <h4 class="font-bold text-gray-800 mb-3 text-center">Asset Value Graph</h4>
-                    <div class="chart-container">
-                        <canvas id="depChart"></canvas>
-                    </div>
+                <div id="partialYearWarning" class="hidden mt-3 text-xs text-orange-600 bg-orange-50 border border-orange-200 p-2 rounded">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    Note: Partial year ignored as per "Completed Year" rule.
                 </div>
             </div>
         </div>
@@ -452,11 +426,10 @@
             empName: '',
             empCode: '',
             saleDate: null,
-            salePrice: 5000
+            salePrice: 5000 // Total Incl GST
         };
 
         const DEP_RATE = 0.50; // 50%
-        let chartInstance = null;
 
         // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -529,23 +502,22 @@
             // 4. Depreciation Loop
             let wdv = effectiveCost;
             let history = [];
-            let wdvPoints = [effectiveCost];
-            let labels = ['Purchase'];
 
             for(let i=1; i<=completedYears; i++) {
                 let dep = wdv * DEP_RATE;
                 let closing = wdv - dep;
                 history.push({ year: i, dep: dep, closing: closing });
-                wdvPoints.push(closing);
-                labels.push(`Year ${i}`);
                 wdv = closing;
             }
 
             // 5. Final Math
-            // "reduced by the amount ... paid or recovered"
-            // The salePrice input is now explicitly the Gross/Total amount paid by employee.
-            // So we deduct the full salePrice from WDV.
-            let perquisite = Math.max(0, wdv - state.salePrice);
+            // BACK-CALCULATION OF GST
+            const gstRateOnSale = 0.18; // 18% assumed for laptops
+            const saleBase = state.salePrice / (1 + gstRateOnSale);
+            const saleGST = state.salePrice - saleBase;
+
+            // Deduction is the Base Amount (Excl. GST) as per conservative tax planning
+            let perquisite = Math.max(0, wdv - saleBase);
 
             // --- Render Report ---
             
@@ -559,7 +531,7 @@
             document.getElementById('repEmpName').innerText = state.empName;
             document.getElementById('repEmpCode').innerText = state.empCode;
             document.getElementById('repSaleDate').innerText = formatDate(state.saleDate);
-            document.getElementById('repRecoveryAmount').innerText = formatCurrency(state.salePrice);
+            document.getElementById('repRecoveryTotal').innerText = formatCurrency(state.salePrice);
             document.getElementById('repYears').innerText = completedYears;
 
             // Verdict
@@ -568,15 +540,15 @@
             const vText = document.getElementById('verdictText');
             
             if(perquisite > 0) {
-                // Taxable: Use CSS Variables for Styling
+                // Taxable
                 vBanner.style.backgroundColor = "var(--status-taxable-bg)";
                 vBanner.style.borderColor = "var(--status-taxable-text)";
                 vText.style.color = "var(--status-taxable-text)";
                 vText.innerText = "Taxable Perquisite";
             } else {
-                // Non-Taxable: Use Grey/Muted variables
+                // Non-Taxable
                 vBanner.style.backgroundColor = "var(--status-none-bg)";
-                vBanner.style.borderColor = "#9CA3AF"; // Gray 400
+                vBanner.style.borderColor = "#9CA3AF"; 
                 vText.style.color = "var(--status-none-text)";
                 vText.innerText = "No Taxable Benefit";
             }
@@ -597,7 +569,10 @@
                  tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-center text-gray-400 italic">No completed years of use.</td></tr>`;
             }
 
-            document.getElementById('tableRecovery').innerText = `(-) ${formatCurrency(state.salePrice)}`;
+            // Footer of Table: Breakdown of Recovery
+            document.getElementById('tableRecoveryBase').innerText = `(-) ${formatCurrency(saleBase)}`;
+            document.getElementById('recoveryBreakdown').innerText = `(Total Deducted ${formatCurrency(state.salePrice)} - GST ${formatCurrency(saleGST)} @ 18%)`;
+            
             document.getElementById('tableFinal').innerText = formatCurrency(perquisite);
 
             // Warning
@@ -609,73 +584,6 @@
             } else {
                  warn.classList.add('hidden');
             }
-
-            // Chart
-            updateChart(labels, wdvPoints, state.salePrice);
-        }
-
-        function updateChart(labels, wdvData, salePrice) {
-            const ctx = document.getElementById('depChart').getContext('2d');
-            const saleData = new Array(wdvData.length).fill(salePrice);
-            
-            // Get color from variable for chart
-            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim();
-            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--brand-secondary').trim();
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Asset WDV',
-                            data: wdvData,
-                            borderColor: primaryColor,
-                            backgroundColor: 'rgba(85, 26, 235, 0.1)', // #551aeb with opacity
-                            borderWidth: 2,
-                            tension: 0.1,
-                            fill: true,
-                            pointRadius: 4
-                        },
-                        {
-                            label: 'Recovery (Paid by Emp)',
-                            data: saleData,
-                            borderColor: '#6B7280', // Gray 500
-                            borderDash: [5, 5],
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            fill: false
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f3f4f6' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
         }
 
         // --- Helpers ---
@@ -697,6 +605,7 @@
             }
 
             const element = document.getElementById('report-content');
+            
             const opt = {
                 margin:       [0.5, 0.5, 0.5, 0.5], 
                 filename:     `Perquisite_Valuation_${state.empCode || 'Report'}.pdf`,
@@ -705,16 +614,7 @@
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            const originalHeight = element.style.height;
-            element.style.height = 'auto';
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.height = originalHeight;
-            }).catch(err => {
-                console.error("PDF generation failed:", err);
-                alert("An error occurred while generating the PDF. Please try again.");
-                element.style.height = originalHeight;
-            });
+            html2pdf().set(opt).from(element).save();
         }
 
     </script>
